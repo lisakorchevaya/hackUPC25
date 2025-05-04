@@ -1,5 +1,6 @@
 import pandas as pd
 import sqlite3
+import sys
 
 global db_path
 global csv_path
@@ -22,7 +23,18 @@ def csv_to_sqlite(enfermedad):
     cursor = conn.cursor()
 
     # Crear la tabla automáticamente según las columnas del CSV
-    columns = ", ".join([f"{col} TEXT" for col in df.columns])  # Todas las columnas como TEXT por simplicidad
+    columns = ", ".join([f"{col} TEXT" for col in df.columns]) 
+    columnas_tipadas = []
+    for idx, col in enumerate(df.columns):
+        if idx in [0, 1, 2, 5]:  # data, setmana_epidemiologica, any, casos_bronquio
+            tipo = "INTEGER"
+        elif idx == 6:  # tasa_casos
+            tipo = "REAL"
+        else:
+            tipo = "TEXT"
+        columnas_tipadas.append(f"{col} {tipo}")
+
+    columns_def = ", ".join(columnas_tipadas)
     cursor.execute(f"CREATE TABLE IF NOT EXISTS {enfermedad} ({columns})")
 
     # Insertar los datos del DataFrame en la tabla
@@ -37,4 +49,8 @@ def csv_to_sqlite(enfermedad):
     print(f"Datos del archivo '{csv_path}' insertados en la base de datos '{db_path}', tabla '{enfermedad}'.")
     
 
-csv_to_sqlite( "pneumonia" )
+#csv_to_sqlite( "pneumonia" )
+
+if __name__ == "__main__":
+    enfermedad = sys.argv[1]
+    csv_to_sqlite(enfermedad)
